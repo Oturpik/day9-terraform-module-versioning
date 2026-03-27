@@ -183,3 +183,21 @@ resource "aws_autoscaling_group" "asg" {
   health_check_grace_period = 300
 
 }
+
+# Fetch running EC2 instances with the ASG tag
+data "aws_instances" "asg_instances" {
+  filter {
+    name   = "tag:Name"
+    values = [var.cluster_name]
+  }
+  filter {
+    name   = "instance-state-name"
+    values = ["running"]
+  }
+}
+
+# Get detailed info for each instance
+data "aws_instance" "asg_instance" {
+  for_each    = toset(data.aws_instances.asg_instances.ids)
+  instance_id = each.value
+}
